@@ -29,9 +29,7 @@ The proposal's rule sheet spells these `rotton_*`. Keep the order above in Robof
 - The box touches the fruit's edges, with no extra background.
 - **Banana bunches:** box each banana seen on its own. Skip it if you cannot see where it starts and ends.
 - **Partly hidden fruit:** box only the part you can see. Skip it if too little is visible, or if you cannot tell which fruit it is or whether it is rotten.
-
-> **Open item for Jasper:** the proposal says "less than (idk a third or half) is visible". Pick one threshold before
-> annotation starts, otherwise four people will apply four different rules.
+- **Bananas specifically:** everything except the stem must be visible. The stem can be hidden or cut off.
 
 ## Do not label
 
