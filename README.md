@@ -34,6 +34,7 @@ All work runs in Colab. Each member owns one notebook, so nobody edits the same 
 3. Choose **Runtime > Change runtime type > T4 GPU**.
 4. Run the cells from the top. They clone this repo and YOLO, and load the dataset from Drive.
 5. Save with **File > Save a copy in GitHub**, so your outputs are visible to markers. Commit only your own notebook.
+6. Your notebook makes `results_for_github.zip` in `IAT360-Group 18/results/`. Unzip it at the top of the repo and commit, so metrics, figures and weights are on GitHub too.
 
 A finished run is skipped when you re-run, so a repeat never wastes GPU time. If Colab disconnects mid-run, call
 `fy.train_run(name, owner, overrides=..., resume=True)`.
