@@ -1,0 +1,19 @@
+# Public datasets: linked in the README, not redistributed (see docs/DATA_SOURCES.md)
+datasets/fruit_freshness/images/train/*
+datasets/fruit_freshness/images/val/*
+datasets/fruit_freshness/labels/train/*
+datasets/fruit_freshness/labels/val/*
+!datasets/fruit_freshness/**/.gitkeep
+
+# Generated while running
+datasets/*.cache
+datasets/**/*.cache
+datasets/smoke/
+rehearsal/
+runs/
+*.pt
+!weights/*.pt
+
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store

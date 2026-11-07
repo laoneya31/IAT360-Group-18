@@ -1,0 +1,14 @@
+# YOLO dataset config for Group 18. No `path:` key on purpose: Ultralytics then resolves
+# the paths below relative to this file, so it works wherever the repo is cloned.
+train: datasets/fruit_freshness/images/train
+val: datasets/fruit_freshness/images/val
+test: datasets/fruit_freshness/images/test
+
+nc: 6
+names:
+  0: fresh_apple
+  1: fresh_banana
+  2: fresh_orange
+  3: rotten_apple
+  4: rotten_banana
+  5: rotten_orange

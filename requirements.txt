@@ -1,0 +1,2 @@
+kagglehub
+# YOLO is installed from the official repo in each notebook, pinned to v8.4.204.
