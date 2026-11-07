@@ -11,6 +11,8 @@ import json
 import math
 import random
 import shutil
+import tempfile
+import time
 import zipfile
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -82,22 +84,79 @@ def dataset_ready(root=DATASET):
     return all(images_in(root / "images" / s) for s in ("train", "val"))
 
 
+def _zip_splits(zip_path):
+    """Which splits hold images in a dataset zip."""
+    with zipfile.ZipFile(zip_path) as z:
+        return {n.split("/")[1] for n in z.namelist()
+                if n.startswith("images/") and n.count("/") == 2 and Path(n).suffix.lower() in IMG_EXTS}
+
+
 def fetch_dataset(root=DATASET):
-    """Unzip the team dataset from Drive into datasets/fruit_freshness if needed."""
+    """Make datasets/fruit_freshness match the team zip on Drive.
+
+    A newer zip replaces the local copy, so nobody trains on old data by accident. A zip
+    with no images is refused. Without Drive, a dataset already in place is used as it is.
+    """
     root = Path(root)
-    if dataset_ready(root):
-        print(f"Dataset already in place: {root}")
-        return True
     team = find_team_drive()
     zip_path = team / "dataset" / DATASET_ZIP_NAME if team else None
     if zip_path is None or not zip_path.exists():
+        if dataset_ready(root):
+            print(f"Dataset already in place: {root}")
+            return True
         print(f"Dataset not found. Expected '{TEAM_FOLDER}/dataset/{DATASET_ZIP_NAME}' on Drive.")
         print("If the folder exists, add a shortcut to it in My Drive and re-run.")
         return False
+
+    info = zip_path.stat()
+    stamp = f"{info.st_size}:{int(info.st_mtime)}"
+    marker = root / ".source_zip"
+    if dataset_ready(root) and marker.exists() and marker.read_text() == stamp:
+        print(f"Dataset up to date: {root}")
+        return True
+    splits = _zip_splits(zip_path)
+    if not {"train", "val"} <= splits:
+        print(f"{zip_path.name} on Drive has no usable images ({info.st_size:,} bytes, splits: "
+              f"{sorted(splits) or 'none'}). Ask Philip to re-upload it.")
+        return False
+    for split in splits:
+        for folder in (root / "images" / split, root / "labels" / split):
+            for path in folder.glob("*") if folder.is_dir() else []:
+                if path.name != ".gitkeep":
+                    path.unlink()
+    for cache in (root / "labels").glob("*.cache"):
+        cache.unlink()
     with zipfile.ZipFile(zip_path) as z:
         z.extractall(root)
-    print(f"Extracted {zip_path.name} to {root}")
+    marker.write_text(stamp)
+    print(f"Extracted {zip_path.name} ({info.st_size / 1e6:.1f} MB, splits {sorted(splits)}) to {root}")
     return dataset_ready(root)
+
+
+def share_dataset(root=DATASET, force=False):
+    """Validate the dataset, then upload it to the team folder as the shared zip.
+
+    Refuses an invalid or empty dataset, and refuses to replace the zip on Drive with one
+    less than half its size unless force=True, so a good dataset cannot be overwritten
+    by running this in a fresh session.
+    """
+    root = Path(root)
+    assert_valid(validate_dataset(root, verbose=False))
+    team = find_team_drive()
+    if team is None:
+        raise RuntimeError(f"Shared folder not found. Add a shortcut to '{TEAM_FOLDER}' in My Drive.")
+    target = team / "dataset" / DATASET_ZIP_NAME
+    target.parent.mkdir(exist_ok=True)
+    stage = Path(tempfile.mkdtemp())
+    archive = Path(shutil.make_archive(str(stage / "fruit_freshness"), "zip", root))
+    new_size = archive.stat().st_size
+    if target.exists() and new_size < 0.5 * target.stat().st_size and not force:
+        raise RuntimeError(f"Refusing to replace the {target.stat().st_size / 1e6:.1f} MB zip on Drive "
+                           f"with a {new_size / 1e6:.1f} MB one. Use force=True if this is intended.")
+    shutil.copy(archive, target)
+    shutil.rmtree(stage, ignore_errors=True)
+    print(f"Shared {new_size / 1e6:.1f} MB: {target}")
+    return target
 
 
 def write_config(root, path):

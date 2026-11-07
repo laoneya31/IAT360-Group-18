@@ -9,6 +9,7 @@ datasets/fruit_freshness/labels/val/*
 datasets/*.cache
 datasets/**/*.cache
 datasets/smoke/
+datasets/**/.source_zip
 rehearsal/
 runs/
 results/evals/
