@@ -642,13 +642,60 @@ def compare_runs(split="val", names=None, rehearsal=False, baseline="baseline"):
     return df.round(4)
 
 
-def plot_comparison(df, title, baseline="baseline", metric="mAP50_95", save_to=None):
-    """Horizontal dot plot of one metric per run, baseline marked in orange."""
+def planned_runs():
+    """Every run the group plans, with its owner, in presentation order."""
+    runs = [("baseline", "Daksh"), ("baseline_seed1", "Daksh")]
+    for owner, (param, values) in TUNING_PLAN.items():
+        runs += [(f"{param}_{v}", owner) for v in values]
+    runs += [("aug_none", "Jasper"), ("aug_limited", "Jasper"), ("final", "Philip")]
+    return runs
+
+
+def run_status(split="val", rehearsal=False):
+    """Which planned runs are trained, evaluated and have figures in the shared folder.
+
+    Slides and the report need the same figures for every run, so this shows at a glance
+    whose results are still missing.
+    """
+    import pandas as pd
+    root = output_root(rehearsal)
+    rows = []
+    for name, owner in planned_runs():
+        train_figs = root / "figures" / name
+        eval_figs = root / "figures" / f"{name}_{split}"
+        rows.append(dict(run=name, owner=owner,
+                         trained=(root / "metrics" / f"{name}__train.json").exists(),
+                         evaluated=(root / "metrics" / f"{name}__{split}.json").exists(),
+                         training_plots=len(list(train_figs.glob("*.png"))) if train_figs.is_dir() else 0,
+                         eval_plots=len(list(eval_figs.glob("*.png"))) if eval_figs.is_dir() else 0))
+    return pd.DataFrame(rows).set_index("run")
+
+
+def seed_noise(df, baseline="baseline", repeat="baseline_seed1", metric="mAP50_95"):
+    """How far the metric moves when only the random seed changes, or None if not measured.
+
+    A tuning run whose gap to the baseline is smaller than this cannot be told apart
+    from luck. One repeat is a rough estimate, so treat gaps near it as a tie.
+    """
+    if baseline in df.index and repeat in df.index:
+        return abs(float(df.loc[repeat, metric]) - float(df.loc[baseline, metric]))
+    return None
+
+
+def plot_comparison(df, title, baseline="baseline", metric="mAP50_95", save_to=None, noise=None):
+    """Horizontal dot plot of one metric per run, baseline marked in orange.
+
+    With `noise` (from seed_noise), a grey band marks baseline +/- noise: runs inside it
+    are not distinguishable from the baseline.
+    """
     import matplotlib.pyplot as plt
     data = df[metric].iloc[::-1]
     fig, ax = plt.subplots(figsize=(7, 0.5 * len(data) + 1.4))
     fig.patch.set_facecolor("#fcfcfb")
     ax.set_facecolor("#fcfcfb")
+    if noise and baseline in data.index:
+        centre = float(data[baseline])
+        ax.axvspan(centre - noise, centre + noise, color="#d9d8d3", alpha=0.5, zorder=0, lw=0)
     y = range(len(data))
     colors = ["#eb6834" if n == baseline else "#2a78d6" for n in data.index]
     ax.hlines(y, 0, data.values, color="#d9d8d3", linewidth=1.5, zorder=1)
@@ -658,7 +705,10 @@ def plot_comparison(df, title, baseline="baseline", metric="mAP50_95", save_to=N
                     va="center", fontsize=9, color="#0b0b0b")
     ax.set_yticks(list(y), data.index, fontsize=9, color="#0b0b0b")
     ax.set_xlim(0, max(float(data.max()) * 1.18, 1e-3))
-    ax.set_xlabel(metric, fontsize=9, color="#52514e")
+    label = metric
+    if noise and baseline in data.index:
+        label += f"    (grey band: baseline +/- seed noise of {noise:.3f})"
+    ax.set_xlabel(label, fontsize=9, color="#52514e")
     ax.tick_params(axis="x", labelsize=8, colors="#52514e", length=0)
     ax.tick_params(axis="y", length=0)
     for side in ("top", "right", "left"):

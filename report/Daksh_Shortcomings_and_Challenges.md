@@ -53,4 +53,6 @@ TODO, with real numbers:
 - Baseline mAP@0.5, mAP@0.5:0.95, precision, recall, F1 and accuracy
 - Rotten recall per class, and how many rotten fruit were called fresh
 - Underfit or overfit, using `fy.fit_report("baseline")`, with concrete fixes
-- Batch size result and whether the gap exceeds run-to-run noise
+- Batch size result and whether the gap exceeds run-to-run noise. Noise is measured by `baseline_seed1`, the baseline
+  retrained with only the seed changed. The notebook prints a verdict per batch size and shades the noise band on
+  `tuning_batch.png`. Other members can quote the same number with `fy.seed_noise(table)`.
