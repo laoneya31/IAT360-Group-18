@@ -33,6 +33,7 @@ NC = len(CLASS_NAMES)
 ROTTEN_IDS = (3, 4, 5)
 IMG_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 SPLITS = ("train", "val", "test")
+WORKING_CONF = 0.25  # confidence used for accuracy and the confusion matrix
 
 # The group baseline. These are Ultralytics defaults, with two deliberate exceptions.
 #  * optimizer: the default "auto" IGNORES lr0, so lr0 tuning would change nothing.
@@ -450,24 +451,41 @@ def metrics_from_matrix(matrix, nc=NC):
 
 
 def evaluate(name, weights, data=CONFIG, split="val", imgsz=None, rehearsal=False):
-    """Score a trained model and save every metric the rubric asks for."""
+    """Score a trained model and save every metric the rubric asks for.
+
+    Two passes, because they answer different questions. mAP needs YOLO's default
+    near-zero confidence so it can sweep the whole precision-recall curve. Accuracy and
+    the confusion matrix need the confidence a real deployment would use: at the
+    default, nearly every low-score box counts as a false alarm.
+    """
     from ultralytics import YOLO
     root = output_root(rehearsal)
     imgsz = imgsz or (REHEARSAL if rehearsal else BASELINE)["imgsz"]
-    result = YOLO(str(weights)).val(data=str(data), split=split, imgsz=imgsz, plots=True,
-                                    project=str(root / "evals"), name=f"{name}_{split}",
-                                    exist_ok=True, verbose=False)
+    common = dict(data=str(data), split=split, imgsz=imgsz, plots=True, exist_ok=True,
+                  project=str(root / "evals"), verbose=False)
+    model = YOLO(str(weights))
+    result = model.val(name=f"{name}_{split}", **common)
+    working = model.val(name=f"{name}_{split}_working", conf=WORKING_CONF, **common)
+    for plot in Path(working.save_dir).glob("confusion_matrix*.png"):
+        shutil.copy2(plot, Path(result.save_dir) / plot.name)
+
     box = result.box
     rows = {}
     for i, cid in enumerate(box.ap_class_index):
         p, r, ap50, ap = box.class_result(i)
-        rows[CLASS_NAMES[int(cid)]] = dict(precision=float(p), recall=float(r), f1=_f1(p, r),
+        rows[CLASS_NAMES[int(cid)]] = dict(precision=float(p), recall=float(r), f1=float(_f1(p, r)),
                                            mAP50=float(ap50), mAP50_95=float(ap))
     rotten = [rows[CLASS_NAMES[i]]["recall"] for i in ROTTEN_IDS if CLASS_NAMES[i] in rows]
-    out = dict(name=name, split=split, precision=float(box.mp), recall=float(box.mr),
-               f1=_f1(box.mp, box.mr), mAP50=float(box.map50), mAP50_95=float(box.map),
+    matrix = working.confusion_matrix.matrix
+    true_boxes = int(np.asarray(matrix)[:, :NC].sum())
+    if true_boxes != int(box.nc and result.nt_per_class.sum()):
+        raise RuntimeError(f"Confusion matrix holds {true_boxes} true boxes, "
+                           f"expected {int(result.nt_per_class.sum())}")
+    out = dict(name=name, split=split, conf=WORKING_CONF, true_boxes=true_boxes,
+               precision=float(box.mp), recall=float(box.mr), f1=float(_f1(box.mp, box.mr)),
+               mAP50=float(box.map50), mAP50_95=float(box.map),
                rotten_recall=float(np.mean(rotten)) if rotten else 0.0, per_class=rows,
-               **metrics_from_matrix(result.confusion_matrix.matrix))
+               **metrics_from_matrix(matrix))
     _write_json(root / "metrics" / f"{name}__{split}.json", out)
     export_figures(f"{name}_{split}", result.save_dir, rehearsal)
     return out
