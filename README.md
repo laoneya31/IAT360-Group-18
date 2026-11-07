@@ -53,6 +53,10 @@ A finished run is skipped when you re-run, so a repeat never wastes GPU time. If
 | Daksh | `batch` | 16 | 8, 32, 64 |
 | Lavanya | `freeze` | none | 5, 10, 15 |
 
+Daksh also retrains the baseline once with `seed=1` (`baseline_seed1`). The gap between the two runs is the run-to-run
+noise: a tuning result smaller than `fy.seed_noise(table)` is a tie, not a win. `fy.run_status()` shows which of the
+group's planned runs are trained, evaluated and have figures in the shared folder.
+
 ## Repository layout
 
 ```
