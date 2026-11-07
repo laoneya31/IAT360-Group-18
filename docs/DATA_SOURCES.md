@@ -7,7 +7,7 @@ sharing rights, the assignment says to link the dataset and not share it on GitH
 |---|---|---|---|---|
 | Detection of Rotten Fruits (Roboflow) | https://universe.roboflow.com/ai-project-t3iak/detection-of-rotten-fruits | Train / val | TODO | TODO |
 | Fruit Images for Object Detection (Kaggle) | https://www.kaggle.com/datasets/mbkinaci/fruit-images-for-object-detection | Train / val, relabelled with freshness | TODO | TODO |
-| Fruits Fresh and Rotten for Classification (Kaggle) | https://www.kaggle.com/datasets/sriramr/fruits-fresh-and-rotten-for-classification | Composite scenes; merge "stale" into "rotten" | TODO | TODO |
+| Fruits Fresh and Rotten for Classification (Kaggle) | https://www.kaggle.com/datasets/sriramr/fruits-fresh-and-rotten-for-classification | Composite scenes; this download has no "stale" folders, so nothing needs merging | TODO | TODO |
 | Our own 120 photos | `datasets/fruit_freshness/images/test` | Held-out test set | Ours; check store photo policy | TODO after face blurring |
 
 ## Tools

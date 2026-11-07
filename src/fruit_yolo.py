@@ -11,7 +11,6 @@ import json
 import math
 import random
 import shutil
-import time
 import zipfile
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -80,7 +79,7 @@ def output_root(rehearsal=False):
 
 def dataset_ready(root=DATASET):
     root = Path(root)
-    return all(_images_in(root / "images" / s) for s in ("train", "val"))
+    return all(images_in(root / "images" / s) for s in ("train", "val"))
 
 
 def fetch_dataset(root=DATASET):
@@ -105,14 +104,14 @@ def write_config(root, path):
     """Write a YOLO config file for a dataset folder and return its path."""
     root, path = Path(root), Path(path)
     lines = [f"path: {root.resolve().as_posix()}", "train: images/train", "val: images/val"]
-    if _images_in(root / "images" / "test"):
+    if images_in(root / "images" / "test"):
         lines.append("test: images/test")
     lines += ["", f"nc: {NC}", "names:"] + [f"  {i}: {n}" for i, n in enumerate(CLASS_NAMES)]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return path
 
 
-def _images_in(folder):
+def images_in(folder):
     folder = Path(folder)
     if not folder.is_dir():
         return []
@@ -177,7 +176,7 @@ def validate_dataset(root=DATASET, nc=NC, near_duplicates=True, splits=SPLITS, v
 
     for split in splits:
         img_dir, lbl_dir = root / "images" / split, root / "labels" / split
-        imgs = _images_in(img_dir)
+        imgs = images_in(img_dir)
         images[split] = len(imgs)
         if not imgs:
             (errors if split in ("train", "val") else warnings).append(f"{split}: no images found")
@@ -371,9 +370,45 @@ def require_gpu():
     print("GPU:", torch.cuda.get_device_name(0))
 
 
-def _settings(overrides, rehearsal):
-    args = {**BASELINE, **(REHEARSAL if rehearsal else {}), **(overrides or {})}
-    return args
+def run_settings(overrides=None, rehearsal=False):
+    """The shared baseline, plus any overrides. Pass the result to model.train()."""
+    return {**BASELINE, **(REHEARSAL if rehearsal else {}), **(overrides or {})}
+
+
+def runs_dir(rehearsal=False):
+    return output_root(rehearsal) / "runs"
+
+
+def weights_path(name, rehearsal=False):
+    return output_root(rehearsal) / "weights" / f"{name}.pt"
+
+
+def record_run(name, owner, model, overrides=None, rehearsal=False):
+    """Save best.pt, the run's settings and its plots after model.train() finishes."""
+    root = output_root(rehearsal)
+    save_dir = Path(model.trainer.save_dir)
+    weights = weights_path(name, rehearsal)
+    weights.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(save_dir / "weights" / "best.pt", weights)
+
+    batch = int(model.trainer.batch_size)
+    accumulate = max(round(int(model.trainer.args.nbs) / batch), 1)
+    meta = dict(name=name, owner=owner, overrides=overrides or {}, rehearsal=rehearsal,
+                minutes=_train_minutes(save_dir), batch=batch, accumulate=accumulate,
+                effective_batch=batch * accumulate,
+                settings={k: str(v) for k, v in vars(model.trainer.args).items()})
+    _write_json(root / "metrics" / f"{name}__train.json", meta)
+    print(f"{name}: finished in {meta['minutes']} min. batch {batch} x accumulate {accumulate} "
+          f"= effective batch {meta['effective_batch']}. Saved {weights}")
+    export_figures(name, save_dir, rehearsal)
+    return weights
+
+
+def _train_minutes(save_dir):
+    import pandas as pd
+    df = pd.read_csv(Path(save_dir) / "results.csv")
+    df.columns = [c.strip() for c in df.columns]
+    return round(float(df["time"].iloc[-1]) / 60, 1) if "time" in df else None
 
 
 def train_run(name, owner, overrides=None, data=CONFIG, rehearsal=False, force=False, resume=False):
@@ -381,42 +416,24 @@ def train_run(name, owner, overrides=None, data=CONFIG, rehearsal=False, force=F
 
     A run that already finished is skipped unless force=True, so re-running a notebook
     never wastes GPU time. After a Colab disconnect, resume=True continues from last.pt.
-    Returns the path to best.pt.
+    Returns the path to the saved weights.
     """
     from ultralytics import YOLO
     if not rehearsal:
         require_gpu()
         check_config(data)
-    root = output_root(rehearsal)
-    run_dir, weights = root / "runs" / name, root / "weights" / f"{name}.pt"
+    weights = weights_path(name, rehearsal)
     if weights.exists() and not (force or resume):
         print(f"{name}: already trained, using {weights}")
         return weights
-
-    args = _settings(overrides, rehearsal)
-    started = time.time()
     if resume:
-        model = YOLO(str(run_dir / "weights" / "last.pt"))
+        model = YOLO(str(runs_dir(rehearsal) / name / "weights" / "last.pt"))
         model.train(resume=True)
     else:
+        args = run_settings(overrides, rehearsal)
         model = YOLO(args.pop("model"))
-        model.train(data=str(data), project=str(root / "runs"), name=name, exist_ok=True, **args)
-    save_dir = Path(model.trainer.save_dir)
-    weights.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(save_dir / "weights" / "best.pt", weights)
-
-    batch = int(model.trainer.batch_size)
-    nbs = int(model.trainer.args.nbs)
-    accumulate = max(round(nbs / batch), 1)
-    meta = dict(name=name, owner=owner, overrides=overrides or {}, rehearsal=rehearsal,
-                minutes=round((time.time() - started) / 60, 1),
-                batch=batch, accumulate=accumulate, effective_batch=batch * accumulate,
-                settings={k: str(v) for k, v in vars(model.trainer.args).items()})
-    _write_json(root / "metrics" / f"{name}__train.json", meta)
-    print(f"{name}: finished in {meta['minutes']} min. batch {batch} x accumulate {accumulate} "
-          f"= effective batch {meta['effective_batch']}. Saved {weights}")
-    export_figures(name, save_dir, rehearsal)
-    return weights
+        model.train(data=str(data), project=str(runs_dir(rehearsal)), name=name, exist_ok=True, **args)
+    return record_run(name, owner, model, overrides, rehearsal)
 
 
 def _write_json(path, payload):
@@ -450,6 +467,14 @@ def metrics_from_matrix(matrix, nc=NC):
                 false_alarms=float(m[:nc, nc].sum()))
 
 
+def trained_imgsz(name, rehearsal=False):
+    """The image size a run was trained at, so it is evaluated at the same size."""
+    path = output_root(rehearsal) / "metrics" / f"{name}__train.json"
+    if path.exists():
+        return int(json.loads(path.read_text(encoding="utf-8"))["settings"]["imgsz"])
+    return run_settings(rehearsal=rehearsal)["imgsz"]
+
+
 def evaluate(name, weights, data=CONFIG, split="val", imgsz=None, rehearsal=False):
     """Score a trained model and save every metric the rubric asks for.
 
@@ -460,7 +485,7 @@ def evaluate(name, weights, data=CONFIG, split="val", imgsz=None, rehearsal=Fals
     """
     from ultralytics import YOLO
     root = output_root(rehearsal)
-    imgsz = imgsz or (REHEARSAL if rehearsal else BASELINE)["imgsz"]
+    imgsz = imgsz or trained_imgsz(name, rehearsal)
     common = dict(data=str(data), split=split, imgsz=imgsz, plots=True, exist_ok=True,
                   project=str(root / "evals"), verbose=False)
     model = YOLO(str(weights))
@@ -478,9 +503,9 @@ def evaluate(name, weights, data=CONFIG, split="val", imgsz=None, rehearsal=Fals
     rotten = [rows[CLASS_NAMES[i]]["recall"] for i in ROTTEN_IDS if CLASS_NAMES[i] in rows]
     matrix = working.confusion_matrix.matrix
     true_boxes = int(np.asarray(matrix)[:, :NC].sum())
-    if true_boxes != int(box.nc and result.nt_per_class.sum()):
-        raise RuntimeError(f"Confusion matrix holds {true_boxes} true boxes, "
-                           f"expected {int(result.nt_per_class.sum())}")
+    expected = int(result.nt_per_class.sum())
+    if true_boxes != expected:
+        raise RuntimeError(f"Confusion matrix holds {true_boxes} true boxes, expected {expected}")
     out = dict(name=name, split=split, conf=WORKING_CONF, true_boxes=true_boxes,
                precision=float(box.mp), recall=float(box.mr), f1=float(_f1(box.mp, box.mr)),
                mAP50=float(box.map50), mAP50_95=float(box.map),
@@ -504,6 +529,29 @@ def export_figures(name, source_dir, rehearsal=False):
     for p in kept:
         shutil.copy2(p, dest / p.name)
     return dest
+
+
+def package_results(names, dest=None):
+    """Zip metrics, figures and weights in the repo's layout, ready to commit to GitHub."""
+    root = output_root()
+    stage = Path("/tmp/group18_results") if Path("/tmp").exists() else REPO_ROOT / "_package"
+    shutil.rmtree(stage, ignore_errors=True)
+    (stage / "results" / "metrics").mkdir(parents=True)
+    (stage / "results" / "figures").mkdir(parents=True)
+    (stage / "weights").mkdir()
+    for name in names:
+        for path in (root / "metrics").glob(f"{name}__*.json"):
+            shutil.copy2(path, stage / "results" / "metrics")
+        for folder in (root / "figures").glob(f"{name}*"):
+            if folder.is_dir():
+                shutil.copytree(folder, stage / "results" / "figures" / folder.name, dirs_exist_ok=True)
+        if (root / "weights" / f"{name}.pt").exists():
+            shutil.copy2(root / "weights" / f"{name}.pt", stage / "weights")
+    for chart in (root / "figures").glob("*.png"):
+        shutil.copy2(chart, stage / "results" / "figures")
+    archive = shutil.make_archive(str(Path(dest or root) / "results_for_github"), "zip", stage)
+    print(f"Unzip at the top of the repo, then commit: {archive}")
+    return archive
 
 
 # ---------------------------------------------------------------- reporting
@@ -587,7 +635,7 @@ def fit_report(name, rehearsal=False):
     return out
 
 
-def _yolo_boxes(label_path, width, height):
+def yolo_boxes(label_path, width, height):
     rows = []
     if Path(label_path).exists():
         for line in Path(label_path).read_text(encoding="utf-8").splitlines():
@@ -603,13 +651,13 @@ def score_images(weights, root=DATASET, split="val", conf=0.25, iou=0.5, imgsz=N
     from ultralytics import YOLO
     root = Path(root)
     model = YOLO(str(weights))
-    images = _images_in(root / "images" / split)[:limit]
+    images = images_in(root / "images" / split)[:limit]
     scored = []
     for img in images:
         kw = {"imgsz": imgsz} if imgsz else {}
         result = model.predict(str(img), conf=conf, verbose=False, **kw)[0]
         height, width = result.orig_shape
-        truth = _yolo_boxes(root / "labels" / split / f"{img.stem}.txt", width, height)
+        truth = yolo_boxes(root / "labels" / split / f"{img.stem}.txt", width, height)
         preds = [(int(c), *b, float(s)) for c, b, s in zip(result.boxes.cls.tolist(),
                                                            result.boxes.xyxy.tolist(),
                                                            result.boxes.conf.tolist())]
