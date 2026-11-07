@@ -11,6 +11,8 @@ datasets/**/*.cache
 datasets/smoke/
 rehearsal/
 runs/
+results/evals/
+results/weights/
 *.pt
 !weights/*.pt
 

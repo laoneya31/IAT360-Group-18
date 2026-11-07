@@ -1,6 +1,6 @@
 # Shortcomings and challenges (Daksh)
 
-Draft. The challenges below happened and are final. Sections marked TODO need results from the real baseline.
+Draft. The challenges below happened. Anything marked TODO needs results from the real baseline.
 
 ## Challenges and how we addressed them
 
@@ -9,9 +9,17 @@ logs that it is ignoring `lr0`, so tuning `lr0` would have trained the same mode
 in the Ultralytics source, found it resolves to AdamW with `lr0=0.001` for a dataset our size, and wrote those values into
 the shared baseline. Behaviour stayed the same, and `lr0` became a real hyperparameter.
 
-**Batch size has less effect than expected.** YOLO accumulates gradients up to a nominal batch of 64, so the weights update
-about every 64 images whatever `batch` is set to. We kept this default so the comparison changes one variable only, and
-recorded the effective batch for each run.
+**Batch size is partly cancelled out by gradient accumulation.** YOLO accumulates gradients up to a nominal batch of 64, so
+the weights update about every 64 images whatever `batch` is set to. We kept this default so the comparison changes one
+variable only, and recorded the effective batch for each run. TODO: state the measured effect from the real runs.
+
+**YOLO would not import after installing from the cloned repo.** Cloning into `/content/ultralytics` hid the installed
+package, because `/content` is on Python's search path. We found this by running the setup on a fresh Colab runtime, and
+fixed it by cloning into a differently named folder and doing a normal install.
+
+**The first accuracy figure was meaningless.** YOLO validates at a near-zero confidence so it can compute mAP, which filled
+the confusion matrix with thousands of low-score boxes. We now measure mAP at that default and accuracy at confidence 0.25,
+and checked the result against a separate per-image matcher (0.817 and 0.825 on a practice model).
 
 **A duplicate copy inside a public dataset.** The Kaggle freshness download contains a full second copy of itself in a
 nested folder. A recursive file search would have put the same photos in train and test and inflated our scores. We use
@@ -24,7 +32,7 @@ one of the main signs of rot. Jasper's augmentation experiment tests limited col
 explain a "better" result. We pinned the YOLO version and put the baseline, metrics and output layout in one shared script.
 
 **Format errors surface late.** Many label mistakes do not crash YOLO, they only lower accuracy. We wrote a validator and
-proved it by planting six kinds of mistake in a copy of the test set.
+proved it by planting six kinds of mistake in a copy of the practice set.
 
 **Colab limits.** Free sessions disconnect and files on the machine are lost, so results save to the shared Drive folder,
 finished runs are skipped on re-run, and interrupted runs can resume from the last checkpoint.
