@@ -19,6 +19,21 @@ small edge computer in the store (for example an NVIDIA Jetson) or on a store se
 small and fast enough to run in real time on such hardware. Since a missed rotten fruit costs more than a fresh one sent
 for a second look, we pay most attention to **rotten-class recall**.
 
+## Dataset: Lavanya's 30 test images
+
+For the dataset report (Jasper's section). The 30 images are openly licensed photos of apples, bananas and oranges
+(fresh, rotten and mixed scenes) from Flickr and Wikimedia Commons, found through Openverse and credited in
+[`docs/TEST_IMAGE_CREDITS.md`](../docs/TEST_IMAGE_CREDITS.md). Lavanya annotated them in a private Roboflow project with
+the group's six classes and exported them in YOLOv8 format into `datasets/fruit_freshness/{images,labels}/test`.
+93 boxes: fresh_apple 21, fresh_banana 13, fresh_orange 29, rotten_apple 16, rotten_banana 6, rotten_orange 8.
+
+**Known label issues, not fixed for time.** These lower the measured test score and should be mentioned when the
+results are discussed:
+
+- `lavanya_02` (4 boxes, titled "Rotten apples" at its source) and `lavanya_30` are rotten apples labelled
+  `rotten_orange` and `fresh_orange`.
+- In `lavanya_14`, `15`, `16`, `17` and `19` one box covers a whole banana bunch, against the rule of one box per banana.
+
 ## Presentation script: 1. Problem and use case (0:45)
 
 > Hi, I'm Lavanya. Picture a grocery store's apple bin. One rotten apple at the bottom starts to mold, and within a day

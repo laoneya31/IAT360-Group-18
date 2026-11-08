@@ -9,6 +9,7 @@ rights, we link the dataset and do not share it on GitHub or as a zip.
 | Fruit Images for Object Detection (Kaggle), by Muhammed Buyukkinaci | https://www.kaggle.com/datasets/mbkinaci/fruit-images-for-object-detection | Train / val, relabelled with freshness | CC0: Public Domain | Linked only |
 | Fruits Fresh and Rotten for Classification (Kaggle), by Sriram Reddy Kalluri | https://www.kaggle.com/datasets/sriramr/fruits-fresh-and-rotten-for-classification | Composite scenes; this download has no "stale" folders, so nothing needs merging | Unknown (none stated) | **No.** Linked only |
 | Our own 120 photos | `datasets/fruit_freshness/images/test` | Held-out test set | Ours | Yes, after faces, name tags and licence plates are blurred |
+| Lavanya's 30 test images (part of the 120) | `datasets/fruit_freshness/images/test/lavanya_*.jpg`; credits in [TEST_IMAGE_CREDITS.md](TEST_IMAGE_CREDITS.md) | Held-out test set: existing photos, new labels by Lavanya | CC BY 2.0, CC BY-SA 2.0 and CC0, per image | Yes, with the credits file |
 
 ## Sharing decisions
 
@@ -20,6 +21,10 @@ rights, we link the dataset and do not share it on GitHub or as a zip.
   and never upload its images or our composites made from them.
 - **`fruit_freshness.zip`.** It contains composites from the unknown-licence dataset, so it stays on the private group
   Drive and is never put on GitHub or shared publicly. `.gitignore` already excludes it and the train/val images.
+- **Lavanya's 30 test images.** The rubric allows "existing images that have new labels by you". These are openly
+  licensed photos from Flickr and Wikimedia Commons, found through Openverse, picked as multi-fruit scenes with no faces
+  and not in the Kaggle single-fruit style, to avoid overlap with training data. CC BY and CC BY-SA allow sharing with
+  credit, so they are on GitHub with [TEST_IMAGE_CREDITS.md](TEST_IMAGE_CREDITS.md). EXIF metadata was removed.
 - **Our own photos.** We own them. Before upload: blur faces, name tags and licence plates, and strip GPS location from
   EXIF data. Store photos show only produce displays. If a store asks us not to photograph, we don't.
 
