@@ -51,6 +51,16 @@ the group's six classes and exported them in YOLOv8 format into `datasets/fruit_
 *Who: produce staff and managers. Where: a camera over displays or sorting tables. What: box every fruit, flag the rotten
 ones.*
 
+## Presentation script: 4. Hyperparameter tuning, frozen layers (0:25)
+
+> I tuned freeze, which locks the first layers of the network so they keep their pretrained weights. Freezing 5 layers
+> scored 0.828, a tie with the baseline's 0.834. Freezing 10 or 15 dropped to about 0.80, three times our noise level.
+> The early layers only find edges and colours, which pretraining already handles, but rot is a texture the model has
+> to learn, so the deeper layers need to train. We keep nothing frozen.
+
+**Slide:** "Frozen layers (freeze)", with the comparison chart (`results/figures/tuning_freeze.png`) and three lines:
+*freeze 5: 0.828, tie. freeze 10: 0.799, worse. freeze 15: 0.796, worse. Keep: nothing frozen.*
+
 ## Presentation script: 3b. Worked and failed examples (0:40)
 
 Outline, using the example images from the final evaluation on the test set:
