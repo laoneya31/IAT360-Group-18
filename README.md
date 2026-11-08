@@ -54,8 +54,13 @@ A finished run is skipped when you re-run, so a repeat never wastes GPU time. If
 | Lavanya | `freeze` | none | 5, 10, 15 |
 
 Daksh also retrains the baseline once with `seed=1` (`baseline_seed1`). The gap between the two runs is the run-to-run
-noise: a tuning result smaller than `fy.seed_noise(table)` is a tie, not a win. `fy.run_status()` shows which of the
+noise: a tuning result smaller than `fy.seed_noise(table)` is a tie, not a win. The measured noise is **0.0115**
+mAP@0.5:0.95; `fy.noise_verdict(gap, noise)` returns `better`, `worse` or `tie`. `fy.run_status()` shows which of the
 group's planned runs are trained, evaluated and have figures in the shared folder.
+
+**Baseline result** (validation set, 445 fruit): mAP@0.5:0.95 0.834, mAP@0.5 0.973, F1 0.938, accuracy 0.866, rotten recall
+0.926. No batch size beat it beyond the noise, so the final model keeps `batch=16`. Details:
+[baseline and batch size report](report/Daksh_Baseline_and_BatchSize.md).
 
 ## Repository layout
 
