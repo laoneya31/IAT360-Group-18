@@ -5,7 +5,7 @@ Maps each rubric item to its owner. The final report is a PDF on Canvas, and eve
 | Section | Marks | Owner | Must include |
 |---|---|---|---|
 | Overall structure and citations | 0.5 | All | Project name, group name, student names and numbers, GitHub link, citations for all data, code and tools |
-| Introduction | 0.5 | Lavanya | One paragraph: the problem, type of vision problem, supervised, use cases, target audience, target devices |
+| Introduction | 0.5 | Lavanya | One paragraph: the problem, type of vision problem, supervised, use cases, target audience, target devices. Written: [introduction](Lavanya_Introduction_and_Presentation.md) |
 | Dataset report | 2.5 | Jasper | How data was collected and created, labels, examples of new images with annotations, annotation tool links |
 | Bias and privacy | part of dataset | Philip | Dataset bias and how it could be solved, privacy issues in detail |
 | Training report: baseline | 2.5 | Daksh | Training and evaluation screenshots, metrics, underfit or overfit with concrete fixes. Written: [baseline and batch size](Daksh_Baseline_and_BatchSize.md) |
