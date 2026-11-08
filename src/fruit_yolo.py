@@ -682,6 +682,20 @@ def seed_noise(df, baseline="baseline", repeat="baseline_seed1", metric="mAP50_9
     return None
 
 
+def noise_verdict(gap, noise, places=4):
+    """'better', 'worse' or 'tie' for a gap to the baseline, judged against seed noise.
+
+    Compares at the table's precision, so a gap equal to the noise counts as a tie rather
+    than being decided by floating-point rounding.
+    """
+    if noise is None:
+        raise ValueError("No seed-noise estimate: the table needs both 'baseline' and 'baseline_seed1' rows. "
+                         "If baseline_seed1 has finished, Colab may not be seeing its metrics file on Drive.")
+    if round(abs(gap), places) <= round(noise, places):
+        return "tie"
+    return "better" if gap > 0 else "worse"
+
+
 def plot_comparison(df, title, baseline="baseline", metric="mAP50_95", save_to=None, noise=None):
     """Horizontal dot plot of one metric per run, baseline marked in orange.
 
