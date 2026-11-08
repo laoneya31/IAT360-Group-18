@@ -1,7 +1,7 @@
 # Introduction and presentation scripts (Lavanya)
 
-Report section: Introduction (0.5 marks). Presentation sections: 1 (problem and use case, 0:45) and 3b (worked and failed
-examples, 0:40). Model analysis and the best-model discussion follow once the freeze runs and the final model are done.
+Report section: Introduction. Presentation sections: 1 (problem and use case, 0:45) and 3b (worked and failed examples,
+0:40). The freeze tuning results are in [Lavanya_Freeze.md](Lavanya_Freeze.md).
 
 ## Introduction
 
@@ -21,14 +21,13 @@ for a second look, we pay most attention to **rotten-class recall**.
 
 ## Dataset: Lavanya's 30 test images
 
-For the dataset report (Jasper's section). The 30 images are openly licensed photos of apples, bananas and oranges
+The 30 images are openly licensed photos of apples, bananas and oranges
 (fresh, rotten and mixed scenes) from Flickr and Wikimedia Commons, found through Openverse and credited in
 [`docs/TEST_IMAGE_CREDITS.md`](../docs/TEST_IMAGE_CREDITS.md). Lavanya annotated them in a private Roboflow project with
 the group's six classes and exported them in YOLOv8 format into `datasets/fruit_freshness/{images,labels}/test`.
 93 boxes: fresh_apple 21, fresh_banana 13, fresh_orange 29, rotten_apple 16, rotten_banana 6, rotten_orange 8.
 
-**Known label issues, not fixed for time.** These lower the measured test score and should be mentioned when the
-results are discussed:
+**Known label issues.** These lower the measured test score on the affected classes:
 
 - `lavanya_02` (4 boxes, titled "Rotten apples" at its source) and `lavanya_30` are rotten apples labelled
   `rotten_orange` and `fresh_orange`.
@@ -48,17 +47,16 @@ results are discussed:
 > down. And because missing a rotten fruit is the expensive mistake, the number we care about most is how many rotten
 > fruit the model catches: rotten recall.
 
-About 120 words, which fits 45 seconds at a normal pace.
-
-**Slide:** title "Problem and use case"; one photo of a mixed fruit bin with a rotten fruit circled; three short lines:
-*Who: produce staff, managers. Where: camera over displays or sorting tables. What: box every fruit, flag rotten ones.*
+**Slide:** "Problem and use case", with a photo of a mixed fruit bin and the rotten fruit circled, and three lines:
+*Who: produce staff and managers. Where: a camera over displays or sorting tables. What: box every fruit, flag the rotten
+ones.*
 
 ## Presentation script: 3b. Worked and failed examples (0:40)
 
-To be filled in from the final evaluation (`examples_correct.png` and `examples_incorrect.png`). Planned structure:
+Outline, using the example images from the final evaluation on the test set:
 
-1. One correct example: what the model got right in a hard scene (5 s).
-2. Two or three failures, each with the reason: bagged fruit, early rot that looks fresh, poor lighting, or overlapping
+1. A correct detection in a hard scene, and what the model got right (5 s).
+2. Two or three failures and their causes: bagged fruit, early rot that looks fresh, poor lighting, or overlapping
    bananas (25 s).
-3. What this says about the model's bias, for example that it learned from clean public photos and not real store bins
+3. What the failures say about the model's bias: it learned mostly from clean public photos rather than real store bins
    (10 s).
