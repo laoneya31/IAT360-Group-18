@@ -25,18 +25,8 @@ Existing photos, annotated by Daksh in Roboflow (new labels; the rubric allows e
 | `daksh_pexels-wutthichai-charoenburi-553075115-19811296_jpg.rf.4aadabfa3fcc93fad16b100b5b449b80.jpg` | Banana on White Background | wutthichai charoenburi | [Pexels License](https://www.pexels.com/license/) | [pexels](https://www.pexels.com/photo/banana-on-white-background-19811296/) |
 | `daksh_apple-256268_1280_jpg.rf.cea53f162ec6857183484bcd824e1813.jpg` | Red apple on dark background | jarmoluk | [Pixabay Content License](https://pixabay.com/service/license-summary/) | [pixabay](https://pixabay.com/photos/apple-red-delicious-fruit-vitamins-256268/) |
 | `daksh_Fruitschaal_JPG.rf.0858c2a0f6e142fc10bdb81a20537ad4.jpg` | Fruitschaal | Quichot | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) | [wikimedia commons](https://commons.wikimedia.org/wiki/File:Fruitschaal.JPG) |
-| `daksh_A_ba_jpg.rf.77bc36b113b802deee7786ba78695d7a.jpg` | [ADD] | [ADD] | [ADD] | [ADD] |
-| `daksh_As_jpg.rf.1d015b438a5ef1c8f1f60f8dd9a7a5c1.jpg` | [ADD] | [ADD] | [ADD] | [ADD] |
-| `daksh_daksh_01-1-_jpg.rf.7165ef08a2c2f77f6d71557dc9e056e2.jpg` | [ADD] | [ADD] | [ADD] | [ADD] |
-| `daksh_daksh_01-2-_jpg.rf.4f4616a922df60e9bd29e177e35af824.jpg` | [ADD] | [ADD] | [ADD] | [ADD] |
-| `daksh_daksh_01-3-_jpg.rf.4f94326db7966ff91e88d5fbfbdb4db1.jpg` | [ADD] | [ADD] | [ADD] | [ADD] |
-| `daksh_daksh_01-4-_jpg.rf.684366fcd384ff19f86b146363674556.jpg` | [ADD] | [ADD] | [ADD] | [ADD] |
-| `daksh_daksh_011-_jpg.rf.7f3a029d2c95e5f917cdd5c640f58fa3.jpg` | [ADD] | [ADD] | [ADD] | [ADD] |
-| `daksh_daksh_012-_jpg.rf.0f52eaae8cc7123c17cad8c0dd9c7e7a.jpg` | [ADD] | [ADD] | [ADD] | [ADD] |
-| `daksh_daksh_012_jpg.rf.004c9c03afad657122d8d931286edcbd.jpg` | [ADD] | [ADD] | [ADD] | [ADD] |
 
 ## Licence notes
 
 - **Pexels License** and **Pixabay Content License:** free to use and modify without attribution, including in non-commercial projects. We credit the photographers anyway. Neither licence allows selling unaltered copies or redistributing the photos as a stock collection, which this dataset does not do.
 - **CC BY-SA 3.0:** shared with credit, under the same licence.
-- **Rows marked [ADD]:** the source of these 9 images is not yet recorded. Each needs its source and licence, or it should be replaced with an image we have the right to share.
