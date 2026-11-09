@@ -32,13 +32,14 @@ with the right class).
 | freeze 5 | frozen layers | 0.828 | -0.007 | tie | 0.977 | 0.934 | 0.955 | 0.945 | **0.959** | 48 |
 | freeze 10 | frozen layers | 0.799 | -0.035 | worse | 0.963 | 0.913 | 0.928 | 0.921 | 0.925 | 51 |
 | freeze 15 | frozen layers | 0.796 | -0.038 | worse | 0.960 | 0.933 | 0.902 | 0.917 | 0.904 | 65 |
-
-Jasper's image-size runs (416, 512 and 800) are not in this table yet.
+| imgsz 416 | image size | 0.823 | -0.011 | tie | | 0.937 | 0.968 | 0.953 | 0.972 | 47 |
+| imgsz 512 | image size | 0.825 | -0.009 | tie | | 0.938 | 0.950 | 0.944 | 0.935 | 52 |
+| imgsz 800 | image size | 0.821 | -0.013 | worse (just) | | 0.949 | 0.926 | 0.937 | 0.933 | 51 |
 
 ## What the tuning shows
 
-**The baseline was already close to the best this setup can do.** Of nine tuning runs, none beat it by more than the seed
-noise. Five were ties and four were clearly worse. The settings that hurt all did the same thing: they made it harder for
+**The baseline was already close to the best this setup can do.** Of twelve tuning runs, none beat it by more than the
+seed noise. Seven were ties and five were worse. The settings that hurt all did the same thing: they made it harder for
 the network to adjust its pretrained weights to our data.
 
 - **Learning rate is the most sensitive setting.** Raising `lr0` from 0.001 to 0.003 or 0.01 cost 0.024 and 0.052. Large
@@ -62,21 +63,73 @@ with too few trainable layers it underfits.
 
 ## Best model
 
-**Recommended final model: the baseline settings** (YOLOv8s, `lr0=0.001`, `batch=16`, nothing frozen, `imgsz=640`,
-50 epochs, AdamW), unless Jasper's image-size runs show a gain larger than the noise.
+**Final model: the baseline settings with `lr0=0.0003`** (YOLOv8s, `batch=16`, nothing frozen, `imgsz=640`, 50 epochs,
+AdamW, seed 0). Philip trained it as the run `final`.
 
-**Why.** The group agreed before tuning that a gap inside 0.0115 is a tie, not a win. By that rule every hyperparameter
-keeps its baseline value: no learning rate, batch size or freeze setting beat 0.834 by more than the noise. Combining
+**Why only the learning rate changed.** The group agreed before tuning that a gap inside 0.0115 is a tie, not a win. By
+that rule no batch size, freeze or image size value beat the baseline, so those keep their baseline values. Combining
 several values that each tied would not be justified by the evidence, and could combine their noise rather than their
 gains.
 
-**The one setting worth a second look is `lr0=0.0003`.** It had the highest mAP (0.843), the highest precision (0.965)
-and F1 (0.965), the best rotten-banana score (0.689) and 40% fewer false alarms (29 against 48). That pattern fits how a
-smaller learning rate behaves on a pretrained model: it changes the COCO features more gently and overfits less. But it is
-one run, and +0.009 is smaller than the difference two seeds of the baseline produce. If there is GPU time, training
-`lr0=0.0003` with a second seed would settle it; if both seeds stay above the baseline, it should replace 0.001.
+**Why `lr0=0.0003`.** It was also inside the noise on mAP (+0.009), but it was the only run that improved on every main
+metric at once: the highest mAP (0.843), the highest precision (0.965) and F1 (0.965), the best rotten-banana score
+(0.689) and 40% fewer false alarms (29 against 48). That fits how a smaller learning rate behaves on a pretrained model:
+it changes the COCO features more gently and overfits less.
 
-**Why the baseline performs so well.** YOLOv8s starts from weights that already detect fruit-like objects (COCO includes
-apples, bananas and oranges), and the validation images come from the same public sources as the training images. The
-tuning mostly moved the model away from that good starting point. The real test is how the model does on our own,
-messier photos, which the final evaluation measures.
+**The test set supports the choice.** On our 120 photos the final model beats a model with the baseline settings by
+0.057 mAP@0.5:0.95 (0.286 against 0.229), five times the validation seed noise, and finds twice as many rotten fruit
+(rotten recall 0.406 against 0.200). Caveat: the noise level was measured on validation, and each model was trained once.
+
+**Why validation scores are so high.** YOLOv8s starts from weights that already detect fruit-like objects (COCO includes
+apples, bananas and oranges), and the validation images come from the same public sources as the training images.
+Validation measures how well the model learned those sources, not how it does in a real store. The test set measures
+that.
+
+## Final evaluation on our 120 photos
+
+120 photos we collected and labelled ourselves, 30 per member, 483 fruit. Used once, after the final model was chosen.
+
+| Metric | Final, validation | Final, test | Baseline settings, test |
+|---|---|---|---|
+| mAP@0.5:0.95 | 0.843 | **0.286** | 0.229 |
+| mAP@0.5 | 0.980 | **0.446** | 0.359 |
+| Precision | 0.965 | **0.585** | 0.560 |
+| Recall | 0.964 | **0.503** | 0.348 |
+| F1 | 0.965 | **0.541** | 0.430 |
+| Rotten recall | 0.943 | **0.406** | 0.200 |
+| Accuracy | 0.907 | **0.411** | 0.384 |
+
+| Test class | Precision | Recall | F1 | mAP@0.5 | mAP@0.5:0.95 |
+|---|---|---|---|---|---|
+| fresh apple | 0.658 | 0.496 | 0.565 | 0.513 | 0.325 |
+| fresh banana | 0.411 | 0.611 | 0.492 | 0.432 | 0.245 |
+| fresh orange | 0.669 | 0.691 | 0.680 | 0.657 | 0.356 |
+| rotten apple | 0.646 | 0.498 | 0.563 | 0.491 | 0.357 |
+| rotten banana | 0.346 | 0.464 | 0.396 | 0.319 | 0.212 |
+| rotten orange | 0.780 | 0.257 | 0.386 | 0.266 | 0.223 |
+
+| Photos | Fruit | Right | Wrong class | Missed | False alarms | Images with no mistakes |
+|---|---|---|---|---|---|---|
+| Jasper | 72 | 58 | 6 | 8 | 56 | 13 / 30 |
+| Philip | 168 | 86 | 10 | 72 | 27 | 2 / 30 |
+| Daksh | 150 | 60 | 8 | 82 | 22 | 6 / 30 |
+| Lavanya | 93 | 38 | 15 | 40 | 48 | 3 / 30 |
+| **Total** | **483** | **242** | **39** | **202** | **153** | **24 / 120** |
+
+**The model is much worse on our photos than on validation (0.843 to 0.286).** Training and validation images are
+mostly one or a few fruit on plain backgrounds; our photos are store displays, crowded bowls, bagged fruit and mixed
+lighting.
+
+- **Most errors are missed fruit.** 202 of 483 fruit (42%) were missed, only 39 got the wrong class. Misses pile up in
+  crowded scenes: in one store display (`daksh_012`) all 21 fruit were missed. Jasper's photos, with fewer and larger
+  fruit, did best.
+- **Bananas cause most false alarms** (93 of 153), mostly bunches: some labels box a whole bunch and others each banana,
+  so one fruit counts as both a miss and a false alarm. Part of this is our labelling.
+- **Rotten called fresh happened 28 times** (rotten banana 13, apple 8, orange 7). Training rot is mostly heavy rot, so
+  early rot reads as fresh. Rotten orange recall is lowest (0.257).
+- **Some error is ours:** two rotten-apple photos labelled as oranges and five banana bunches boxed as one fruit in
+  Lavanya's set.
+
+**What this says.** The model works on clean close-ups, including heavily mouldy fruit, but is not ready for a store: it
+misses too many fruit in real displays and too much early rot. The fix is in the data, not the settings: real store
+photos with many fruit per image, early-rot examples, and one agreed rule for banana bunches.

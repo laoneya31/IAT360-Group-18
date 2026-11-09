@@ -24,7 +24,7 @@ for a second look, we pay most attention to **rotten-class recall**.
 The 30 images are openly licensed photos of apples, bananas and oranges
 (fresh, rotten and mixed scenes) from Flickr and Wikimedia Commons, found through Openverse and credited in
 [`docs/TEST_IMAGE_CREDITS.md`](../docs/TEST_IMAGE_CREDITS.md). Lavanya annotated them in a private Roboflow project with
-the group's six classes and exported them in YOLOv8 format into `datasets/fruit_freshness/{images,labels}/test`.
+the group's six classes and exported them in YOLOv8 format; they are in `datasets/fruit_freshness/{images,labels}/test` as `lavanya_lavanya_01` to `30`.
 93 boxes: fresh_apple 21, fresh_banana 13, fresh_orange 29, rotten_apple 16, rotten_banana 6, rotten_orange 8.
 
 **Known label issues.** These lower the measured test score on the affected classes:
@@ -63,10 +63,18 @@ ones.*
 
 ## Presentation script: 3b. Worked and failed examples (0:40)
 
-Outline, using the example images from the final evaluation on the test set:
+> Here's our final model on our own 120 photos. First, what works. In this close-up of a fruit bowl, it boxed all five
+> apples and oranges and labelled every one correctly. And this orange is covered in mould, and it confidently calls it
+> rotten.
+>
+> Now the failures. This is a real store display with 21 fruit, and the model found none of them: it learned from photos
+> of a few fruit on plain backgrounds, never piles like this. Apples in a plastic bag are missed too. And the costly one:
+> 28 times it called a rotten fruit fresh, usually when the rot was just a few brown spots.
+>
+> So our score drops from 0.84 on validation to 0.29 on our photos. The model learned clean public images, not real
+> stores, and fixing that means training on real store photos with early rot.
 
-1. A correct detection in a hard scene, and what the model got right (5 s).
-2. Two or three failures and their causes: bagged fruit, early rot that looks fresh, poor lighting, or overlapping
-   bananas (25 s).
-3. What the failures say about the model's bias: it learned mostly from clean public photos rather than real store bins
-   (10 s).
+**Slide:** "Worked and failed examples", a 2×2 grid (green = true labels, orange = predictions). *Worked:* `lavanya_25`
+(close-up bowl, 5 of 5 right) and `lavanya_13` (mouldy orange, called rotten). *Failed:* `daksh_012` (store display, 0
+of 21 found) and the bagged apples from the notebook's failed grid. Caption: *Validation 0.84, our photos 0.29. Misses in
+crowded scenes; early rot called fresh 28 times.*

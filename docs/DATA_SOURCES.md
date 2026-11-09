@@ -9,7 +9,7 @@ rights, we link the dataset and do not share it on GitHub or as a zip.
 | Fruit Images for Object Detection (Kaggle), by Muhammed Buyukkinaci | https://www.kaggle.com/datasets/mbkinaci/fruit-images-for-object-detection | Train / val, relabelled with freshness | CC0: Public Domain | Linked only |
 | Fruits Fresh and Rotten for Classification (Kaggle), by Sriram Reddy Kalluri | https://www.kaggle.com/datasets/sriramr/fruits-fresh-and-rotten-for-classification | Composite scenes; this download has no "stale" folders, so nothing needs merging | Unknown (none stated) | **No.** Linked only |
 | Our own 120 photos | `datasets/fruit_freshness/images/test` | Held-out test set | Ours | Yes, after faces, name tags and licence plates are blurred |
-| Lavanya's 30 test images (part of the 120) | `datasets/fruit_freshness/images/test/lavanya_*.jpg`; credits in [TEST_IMAGE_CREDITS.md](TEST_IMAGE_CREDITS.md) | Held-out test set: existing photos, new labels by Lavanya | CC BY 2.0, CC BY-SA 2.0 and CC0, per image | Yes, with the credits file |
+| Lavanya's 30 test images (part of the 120) | `datasets/fruit_freshness/images/test/lavanya_lavanya_*.jpg`; credits in [TEST_IMAGE_CREDITS.md](TEST_IMAGE_CREDITS.md) | Held-out test set: existing photos, new labels by Lavanya | CC BY 2.0, CC BY-SA 2.0 and CC0, per image | Yes, with the credits file |
 
 ## Sharing decisions
 
